@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html >
+<head>
+    <title>Employee Directory App</title>     
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <link rel="stylesheet" href="http://code.jquery.com/ui/1.10.2/themes/smoothness/jquery-ui.css" />
+    <script src="http://code.jquery.com/jquery-1.9.1.js"></script>
+    <script src="http://code.jquery.com/ui/1.10.2/jquery-ui.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.6/angular.min.js"></script>
+	<style>
+		.wid{
+			 width: 120px;
+			}
+	</style>
+    <script>
+    var DOB,age;
+    var app = angular.module("app", []);
+
+    app.directive("datepicker", function () {
+        return {
+            restrict: "A",
+            require: "ngModel",
+            link: function (scope, elem, attrs, ngModelCtrl) {
+                var updateModel = function (dateText) {
+                    scope.$apply(function () {
+                        ngModelCtrl.$setViewValue(dateText);
+                    });
+                };
+
+                var options = {
+                   				 dateFormat: 'dd/mm/yy',
+			changeMonth: true,
+			changeYear: true,
+			yearRange: '1900:2150',
+			maxDate: new Date(),
+			inline: true,
+                    onSelect: function (dateText) {
+                         updateModel(dateText);
+						 var now = new Date();
+						 var bdate = $('#datepicker').datepicker('getDate');
+						 DOB = now.getTime() - bdate.getTime();
+					     DOB = Math.floor(DOB / (1000 * 60 * 60 * 24 * 365.25));
+					     document.getElementById('AGE').value = DOB;
+						 $("#AGE").attr('disabled',false);
+                    }
+                };
+                elem.datepicker(options);
+            }
+        }
+    });
+	
+    app.controller("empcontroller", function ($scope) {
+        $scope.date = "";
+    });	
+    app.controller("empcontroller", function($scope,$http){
+				$scope.employees=null;
+				$scope.eid="";
+				$scope.name="";
+				$scope.email="";
+				$scope.dob="";
+				$scope.dept="";
+				$scope.gen="";
+				
+				var refresh=function(){
+				$scope.name="";
+				$scope.email="";
+				$scope.date="";
+				$scope.dept="";
+				$scope.gen="";
+				
+					$http.get("/employees")
+					.success(successHandler)
+					.error(errorHandler)
+				};
+				refresh();
+				
+				function successHandler(r,s,x){
+					$scope.employees=r;
+				}
+				function errorHandler(e,s,x){
+					alert("something wrong");
+				}	
+				$scope.addEmp=function(){
+					console.log("addEmp was called")
+					var data={
+						name:$scope.name,
+						email:$scope.email,
+						dob:$scope.date,
+						dept:$scope.dept,
+						gen:$scope.gen,
+						
+					}
+					$http.post("/employees",data)
+					.success(function(r,s,x){
+						console.log("data updated to the server");
+						refresh();
+					})
+					
+					.error(errorHandler)
+					
+					
+				}//addEmp
+					
+					$scope.deleteFun=function(eid){
+						console.log("Delete Fun was Called")
+					$http.delete("/employees/"+eid)
+					.success(function(r,s,x){
+						console.log("deleted");
+						refresh();
+					}).error(errorHandler)
+					}
+					
+				    $scope.editEmp=function(eid){
+					    console.log("editEmp was Called")
+					$http.get("/employees/"+eid)
+					.success(function(r,s,x){
+						$scope.name=r.name,
+						$scope.email=r.email,
+						$scope.date=r.dob,
+						$scope.dept=r.dept,
+						$scope.gen=r.gen,
+						$scope.eid=r._id;
+						
+					console.log("edited");
+					
+					}).error(errorHandler)
+					}
+			
+				$scope.updateEmp=function(){
+					var data={
+						name:$scope.name,
+						email:$scope.email,
+						dob:$scope.date,
+						dept:$scope.dept,
+						gen:$scope.gen,
+						
+					}
+					$http.put("/employees/"+$scope.eid,data)
+					.success(function(r,s,x){
+					console.log(r);
+					console.log("updated");
+					refresh();
+					}).error(errorHandler)
+				}
+				
+    });
+    </script>
+</head>
+
+<body ng-app="app" ng-controller="empcontroller">
+	<div class="container" >
+      <br/><h1 align="center">Employee Directory App</h1><br/><br/>
+      
+		<table class="table">          
+			<thead>
+			  <tr>
+				<td>Name</td>
+				<td>Email</td>
+				<td>Date of Birth</td>
+				<td>Department</td>
+				<td>Gender</td>
+				<td>Age</td>
+			  </tr>
+			</thead>
+			  
+			<tbody>
+				<tr>
+					
+				  <form name="myForm" novalidate >
+					  <td>
+						<input class="form-control " type="text" ng-model="name" placeholder="Name" name="name" required />
+
+					  </td>
+					  <td>
+						<input class="form-control " type="email" ng-model="email" placeholder="abc@xyz.com" name="email" id="mail" required/>
+						
+					  </td>
+					  <td>
+						<input class="form-control " type="text" ng-model="date" datepicker id="datepicker"  placeholder="yy/mm/dd" required/>
+					  </td>
+					  <td>
+						<input class="form-control " type="text" ng-model="dept" name="dept" placeholder="Department" id="dept" required/>
+						
+					  </td>
+					  <td>
+						<select class="form-control wid " ng-model="gen" id="gen" required>
+							<option>Male</option>
+							<option>Female</option>
+		
+						</select>
+					  </td>
+					  <td>
+						<input class="form-control " ng-model="age"  id="AGE" disabled  placeholder="Age"/>
+					  </td>
+					  <td>
+						  <button class="btn btn-success addbtn"  ng-click="addEmp()" >Add Employee</button>
+						  <td><button class="btn btn-success"  ng-click="updateEmp()">Update Employee</button></td>
+					  </td>
+				
+				  </form>
+				</tr> 
+			
+				<tr ng-repeat="emp in employees">
+				   <td>{{ emp.name }}</td>
+				   <td>{{ emp.email }}</td>
+				   <td>{{emp.dob}}</td>
+				   <td>{{ emp.dept }}</td>
+				   <td>{{ emp.gen }}</td>
+				   <td>{{ emp.age }}</td>
+				   
+				   <td><button class="btn btn-danger btn-sm" ng-click="deleteFun(emp._id)">Delete</button></td>
+				   <td><button class="btn btn-primary btn-sm" ng-click="editEmp(emp._id)">Edit</button></td>
+				</tr>    
+			</tbody>
+			  
+		</table>  
+    </div>
+
+ 
+ 
+
+  
+ 
+</body>
+    
+</html>
+
+
+
