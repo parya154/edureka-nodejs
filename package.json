@@ -1,0 +1,21 @@
+{
+  "name": "y",
+  "version": "1.0.0",
+  "description": "des",
+  "main": "y",
+  "scripts": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git"
+  },
+  "keywords": [
+    "pooja"
+  ],
+  "author": "pooja",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "mongodb": "^2.2.12"
+  }
+}
